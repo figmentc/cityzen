@@ -9,28 +9,79 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
-
-
+import Light from "./light"
+import Typography from '@material-ui/core/Typography';
 
 const styles = theme => ({
   root: {
-    flexGrow: 1,
+    // flexGrow: 1,
+    paddingLeft: 100,
+    paddingRight: 100
   },
   paper: {
-    padding: theme.spacing.unit * 2,
-    textAlign: 'center',
+    padding: theme.spacing.unit * 1,
+    // textAlign: 'center',
     color: theme.palette.text.secondary,
+    elevation: 20,
+    marginLeft: 20,
+    marginRight: 0,
+    square: true,
+    borderRadius: 0
   },
 });
 
 
 
 class Cam extends React.Component {
-    
+    constructor(props){
+        super(props)
+        this.state = {
+            status: "cross",
+            count: 10,
+            senior_detected: false
+        }
+        this.boop = new Audio('/boop.mp3');
+        this.senior_alert = new Audio("/seniorAlert.mp3")
+
+    }
     setRef = webcam => {
       this.webcam = webcam;
       
     };
+
+    countNum = () => {
+        console.log(this.state.senior_detected, this.state.status, this.state.count)
+        if (this.state.status == "cross"){
+            if (this.state.count == -1) {
+                this.setState({status: "no-hand", count: 10})
+            }
+            else{
+                this.setState({count: this.state.count - 1})
+            }
+        }
+        if (this.state.status == "hand"){
+            this.setState({status: "no-hand"})
+            this.boop.play()
+        }
+        else if (this.state.status == "no-hand"){
+            if (this.state.count == 1){
+                if (this.state.senior_detected) {
+                    this.senior_alert.play()
+                    this.setState({status: "senior"})
+                }
+                else{
+                    this.setState({status: "stop"})
+                }
+            }
+            else {this.setState({status: "hand", count: this.state.count - 1})}
+        }
+        else if (this.state.status == "senior"){
+           if (!this.state.senior_detected){
+               console.log("STOPED")
+               this.setState({status: "stop"})
+           } 
+        }
+    }
   
     capture = () => {
     let imageSrc = this.webcam.getScreenshot();
@@ -106,36 +157,91 @@ class Cam extends React.Component {
         }
         // const ctx = this.refs.canvas.getContext('2d');
         let info = JSON.parse(response)
+        
         this.ctx.clearRect(0, 0, this.refs.canvas.width, this.refs.canvas.height);
-        
-        info.forEach((face) => {
-            this.ctx.beginPath();
-            this.ctx.lineWidth="6";
-            this.ctx.strokeStyle="orange";
+        this.ctx.beginPath()
+        this.ctx.lineWidth="14";
+        this.ctx.strokeStyle="grey";
+        this.ctx.moveTo(60,80);
+        this.ctx.lineTo(60,80+120);
+        this.ctx.moveTo(53,80);
+        this.ctx.lineTo(60+130,80);
 
-            this.ctx.rect(face.faceRectangle.left, face.faceRectangle.top, 
-                face.faceRectangle.width, face.faceRectangle.height);
-            this.ctx.stroke()
+        this.ctx.moveTo(this.refs.canvas.width-60,this.refs.canvas.height - 10);
+        this.ctx.lineTo(this.refs.canvas.width-60,this.refs.canvas.height - (10+120));
+        this.ctx.moveTo(this.refs.canvas.width-53,this.refs.canvas.height - 10);
+        this.ctx.lineTo(this.refs.canvas.width-(60+130),this.refs.canvas.height - (10));
 
-            this.ctx.font = "50px Arial";
-            this.ctx.fillStyle = "orange"
-            this.ctx.fillText(face.faceAttributes.age,face.faceRectangle.left+face.faceRectangle.width + 20,
-                face.faceRectangle.height+10);
 
-        })
-        
+        this.ctx.moveTo(this.refs.canvas.width-60,80);
+        this.ctx.lineTo(this.refs.canvas.width-60,80+120);
+        this.ctx.moveTo(this.refs.canvas.width-53,80);
+        this.ctx.lineTo(this.refs.canvas.width-(60+130),80);
+
+
+        this.ctx.moveTo(60,this.refs.canvas.height - 10);
+        this.ctx.lineTo(60,this.refs.canvas.height - (10+120));
+        this.ctx.moveTo(53,this.refs.canvas.height - 10);
+        this.ctx.lineTo(60+130,this.refs.canvas.height - (10));
+
+
+        this.ctx.stroke()
+
+
+        if (info != null && Array.isArray(info)){
+            var seniors = false
+            info.forEach((face) => {
+                
+                if (face.faceAttributes.age > 50) {
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth="6";
+                    this.ctx.strokeStyle="orange";
+                    
+                    this.ctx.rect(face.faceRectangle.left, face.faceRectangle.top, 
+                        face.faceRectangle.width, face.faceRectangle.height);
+                    this.ctx.stroke()
+    
+                    this.ctx.font = "30px Arial";
+                    this.ctx.fillStyle = "orange"
+                    this.ctx.fillRect(face.faceRectangle.left-3, face.faceRectangle.top-40, 150, 40)
+                    this.ctx.fillStyle = "white"
+                    this.ctx.fillText("Age: " + face.faceAttributes.age,face.faceRectangle.left+4, face.faceRectangle.top-5);
+                    
+                    seniors = true
+                }
+                else{
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth="6";
+                    this.ctx.strokeStyle="#058CF7";
+                    
+                    this.ctx.rect(face.faceRectangle.left, face.faceRectangle.top, 
+                        face.faceRectangle.width, face.faceRectangle.height);
+                    this.ctx.stroke()
+    
+                    this.ctx.font = "30px Arial";
+                    this.ctx.fillStyle = "#058CF7"
+                    this.ctx.fillRect(face.faceRectangle.left-3, face.faceRectangle.top-40, 150, 40)
+                    this.ctx.fillStyle = "white"
+                    this.ctx.fillText("Age: " + face.faceAttributes.age,face.faceRectangle.left+4, face.faceRectangle.top-5);
+                    
+                }
+            })
+            this.setState({senior_detected: seniors})
+        }
         
     }
     render() {
       const videoConstraints = {
-        width: 1000,
-        height: 700,
+        width: 900,
+        height: 800,
         facingMode: "user",
       };
 
      const divStyle= {
-        width: 1000,
-        height: 700
+        width: 900,
+        height: 800,
+        textAlign: "center",
+        paddingLeft: 20
 
       }
 
@@ -147,7 +253,7 @@ class Cam extends React.Component {
 
     const canvasStyle = {
         borderRadius: 10,
-        top: "-700px",
+        top: "-800px",
         position: "relative"
 
     }
@@ -158,37 +264,77 @@ class Cam extends React.Component {
       return (
         <div className={classes.root}>
         <Grid container spacing={24}>
+            {/* <Grid item xs={12}>
+          <Paper className={classes.paper}>
+          <Typography variant="display2" gutterBottom>
+                Demo
+            </Typography>
 
-          <Grid item xs={8}>
+          </Paper>
+        </Grid> */}
+
+
+        <Grid item xs={12}>
+          {/* <Paper className={classes.paper}> */}
+          <div style={{textAlign: "center"}}>
+            <img src="/logo.jpg" width={300}/>
+            </div>
+          {/* </Paper> */}
+        </Grid>
+
+
+        <Grid item xs={8} style={{paddingBottom: 0, paddingTop: 0}}><Paper className={classes.paper}> <Typography variant="display2">
+            Cityzen Backend View
+
+            <img src="/young.jpg" width={150} style={{position: "absolute", top: 160, left: 750}}/>
+            <img src="/senior.jpg" width={150} style={{position: "absolute", top: 160, left: 920}}/>
+            </Typography></Paper> 
+        </Grid>
+
+
+        <Grid item xs={4} style={{paddingBottom: 0 , paddingTop: 0}}> <Paper className={classes.paper}> <Typography variant="display2">
+            Pedestrian View
+            </Typography></Paper> 
+
+        </Grid>
+          <Grid item xs={8} style={{paddingTop: 0}}>
             <Paper className={classes.paper}>
-            
                     <div>
-                    <h1 >Cityzen Backend View</h1>
+                    {/* <Typography variant="headline" component="h3">
+                    Cityzen Backend View.
+                    </Typography> */}
+                    {/* <Typography component="p">
+                    Paper can be used to build surface or other elements for your application.
+                    </Typography> */}
+
                 <div style={divStyle}>
                     <Webcam
                     audio={false}
-                    height={700}
+                    height={800}
                     ref={this.setRef}
                     style={webcamStyle}
                     screenshotFormat="image/jpeg"
-                    screenshotQuality={0.1}
-                    width={1000}
+                    screenshotQuality={0.4}
+                    width={900}
                     videoConstraints={videoConstraints}
                 />
 
-                <canvas ref="canvas" width={1000} height={700} style={canvasStyle}/>
+                <canvas ref="canvas" width={900} height={700} style={canvasStyle}/>
 
 
                 </div>
                 
-                <button onClick={this.capture}>Capture photo</button>
+                {/* <button onClick={this.capture}>Capture photo</button> */}
                 </div>
 
             </Paper>
           </Grid>
-          <Grid item xs={4}>
+          <Grid item xs={4}  style={{paddingTop: 0}}>
             <Paper className={classes.paper}>
-                <h1> Pedestrian Light</h1>
+            {/* <Typography variant="display1" gutterBottom>
+            Pedestrian Light
+      </Typography> */}
+                <Light status={this.state.status} count={this.state.count}/>
             </Paper>
           </Grid>
         </Grid>
@@ -197,12 +343,48 @@ class Cam extends React.Component {
       )
     }
     componentDidMount(){
-        // this.interval = setInterval(() => this.capture(), 3000);
+        this.interval = setInterval(() => this.capture(), 3000);
+        this.count = setInterval(() => this.countNum(), 750)
         this.storage = firebase.storage()
         this.storageRef = this.storage.ref()
         this.draw = this.draw.bind(this)
         this.capture = this.capture.bind(this)
         this.facerequest = this.facerequest.bind(this)
+        this.countNum = this.countNum.bind(this)
+
+        this.ctx = this.refs.canvas.getContext('2d');
+        this.ctx.clearRect(0, 0, this.refs.canvas.width, this.refs.canvas.height);
+        this.ctx.beginPath()
+        this.ctx.lineWidth="14";
+        this.ctx.strokeStyle="grey";
+        this.ctx.moveTo(60,80);
+        this.ctx.lineTo(60,80+120);
+        this.ctx.moveTo(53,80);
+        this.ctx.lineTo(60+130,80);
+
+        this.ctx.moveTo(this.refs.canvas.width-60,this.refs.canvas.height - 10);
+        this.ctx.lineTo(this.refs.canvas.width-60,this.refs.canvas.height - (10+120));
+        this.ctx.moveTo(this.refs.canvas.width-53,this.refs.canvas.height - 10);
+        this.ctx.lineTo(this.refs.canvas.width-(60+130),this.refs.canvas.height - (10));
+
+
+        this.ctx.moveTo(this.refs.canvas.width-60,80);
+        this.ctx.lineTo(this.refs.canvas.width-60,80+120);
+        this.ctx.moveTo(this.refs.canvas.width-53,80);
+        this.ctx.lineTo(this.refs.canvas.width-(60+130),80);
+
+
+        this.ctx.moveTo(60,this.refs.canvas.height - 10);
+        this.ctx.lineTo(60,this.refs.canvas.height - (10+120));
+        this.ctx.moveTo(53,this.refs.canvas.height - 10);
+        this.ctx.lineTo(60+130,this.refs.canvas.height - (10));
+
+
+        this.ctx.stroke()
+
+
+
+
     }
   }
 

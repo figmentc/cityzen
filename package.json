@@ -10,7 +10,8 @@
     "react-scripts": "1.1.5",
     "react-shapes": "^0.1.0",
     "react-webcam": "^1.0.1",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "typeface-roboto": "0.0.54"
   },
   "scripts": {
     "start": "react-scripts start",

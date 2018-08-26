@@ -3,15 +3,15 @@ import "./firebase"
 import logo from './logo.svg';
 import './App.css';
 import Cam from "./components/webcam"
+import 'typeface-roboto'
 
 class App extends Component {
   render() {
     return (
       <div>
 
-              <style>{'body { background-color: grey; }'}</style>
+              {/* <style>{'body { background-color: black; }'}</style> */}
       <Cam />
-
       </div>
       // <div className="App">
       //   <header className="App-header">
